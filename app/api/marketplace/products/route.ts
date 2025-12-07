@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, product });
   } catch (error: unknown) {
-    logError(\'Error creating product:\', error);
+    logError('Error creating product:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
