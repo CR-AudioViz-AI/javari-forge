@@ -88,7 +88,7 @@ export async function GET(
       return new NextResponse('File not found', { status: 404 });
     }
   } catch (error: unknown) {
-    logError(\'Download error:\', error);
+    logError('Download error:', error);
     return new NextResponse('Internal server error', { status: 500 });
   }
 }
