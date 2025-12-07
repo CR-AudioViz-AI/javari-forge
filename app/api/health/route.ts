@@ -45,7 +45,7 @@ export async function GET() {
       },
     });
   } catch (error: unknown) {
-    logError(\'Health check failed:\', error);
+    logError('Health check failed:', error);
 
     return NextResponse.json(
       {
