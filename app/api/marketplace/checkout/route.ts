@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: unknown) {
-    logError(\'Checkout API error:\', error);
+    logError('Checkout API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
