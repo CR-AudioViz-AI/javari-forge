@@ -1,45 +1,61 @@
 // Printful Integration for Market Forge
-// Print-on-Demand Automation
-// Updated: December 22, 2025
+// Print-on-Demand Automation - FIXED VERSION
+// Updated: December 22, 2025 - 10:55 PM EST
+// Store ID: 16513682 (Personal orders)
 
 const PRINTFUL_API_KEY = process.env.PRINTFUL_API_KEY;
+const PRINTFUL_STORE_ID = process.env.PRINTFUL_STORE_ID || '16513682';
 const PRINTFUL_API_URL = 'https://api.printful.com';
 
 export interface PrintfulProduct {
   id: number;
-  name: string;
+  title: string;
   type: string;
-  variants: PrintfulVariant[];
+  type_name: string;
+  brand: string;
+  model: string;
   image: string;
+  variant_count: number;
+  currency: string;
+  is_discontinued: boolean;
 }
 
 export interface PrintfulVariant {
   id: number;
+  product_id: number;
   name: string;
   size: string;
   color: string;
-  price: number;
-  availability: string;
+  color_code: string;
+  price: string;
+  in_stock: boolean;
+  availability_status: string;
 }
 
-export interface PrintfulDesign {
-  type: 'front' | 'back' | 'sleeve' | 'label';
-  imageUrl: string;
-  position: {
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  };
+export interface PrintfulProductDetail {
+  product: PrintfulProduct;
+  variants: PrintfulVariant[];
 }
 
-export interface PrintfulOrder {
+export interface ShippingRate {
   id: string;
-  status: string;
-  recipient: PrintfulRecipient;
-  items: PrintfulOrderItem[];
-  costs: PrintfulCosts;
-  created: string;
+  name: string;
+  rate: string;
+  currency: string;
+  minDeliveryDays: number;
+  maxDeliveryDays: number;
+}
+
+export interface CostEstimate {
+  subtotal: string;
+  discount: string;
+  shipping: string;
+  digitization: string;
+  additional_fee: string;
+  fulfillment_fee: string;
+  tax: string;
+  vat: string;
+  total: string;
 }
 
 export interface PrintfulRecipient {
@@ -50,30 +66,18 @@ export interface PrintfulRecipient {
   state_code: string;
   country_code: string;
   zip: string;
-  email: string;
+  email?: string;
   phone?: string;
 }
 
 export interface PrintfulOrderItem {
-  sync_variant_id: number;
+  variant_id: number;
   quantity: number;
-  files: PrintfulFile[];
-}
-
-export interface PrintfulFile {
-  type: string;
-  url: string;
-}
-
-export interface PrintfulCosts {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
+  files: Array<{ type?: string; url: string }>;
 }
 
 /**
- * Get authentication headers
+ * Get authentication headers with store ID
  */
 function getHeaders(): HeadersInit {
   if (!PRINTFUL_API_KEY) {
@@ -82,6 +86,7 @@ function getHeaders(): HeadersInit {
   return {
     'Authorization': `Bearer ${PRINTFUL_API_KEY}`,
     'Content-Type': 'application/json',
+    'X-PF-Store-Id': PRINTFUL_STORE_ID,
   };
 }
 
@@ -100,61 +105,71 @@ async function printfulRequest<T>(
     },
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.result || `Printful API error: ${response.status}`);
+  const data = await response.json();
+  
+  if (data.code !== 200) {
+    throw new Error(data.error?.message || data.result || `Printful API error: ${data.code}`);
   }
 
-  const data = await response.json();
   return data.result;
 }
 
 /**
  * Get catalog of available products
  */
-export async function getCatalog(): Promise<PrintfulProduct[]> {
-  return printfulRequest('/products');
+export async function getCatalog(limit = 20): Promise<PrintfulProduct[]> {
+  const products = await printfulRequest<PrintfulProduct[]>(`/products?limit=${limit}`);
+  return products;
 }
 
 /**
  * Get product details with variants
  */
-export async function getProduct(productId: number): Promise<PrintfulProduct> {
-  return printfulRequest(`/products/${productId}`);
+export async function getProduct(productId: number): Promise<PrintfulProductDetail> {
+  return printfulRequest<PrintfulProductDetail>(`/products/${productId}`);
 }
 
 /**
- * Create sync product (store product linked to Printful)
+ * Get specific variant details
  */
-export async function createSyncProduct(params: {
-  name: string;
-  thumbnail: string;
-  variants: Array<{
-    variant_id: number;
-    retail_price: number;
-    files: PrintfulFile[];
-  }>;
-}): Promise<{ id: number; external_id: string }> {
-  return printfulRequest('/sync/products', {
+export async function getVariant(variantId: number): Promise<PrintfulVariant> {
+  return printfulRequest<PrintfulVariant>(`/products/variant/${variantId}`);
+}
+
+/**
+ * Calculate shipping rates
+ */
+export async function getShippingRates(params: {
+  recipient: PrintfulRecipient;
+  items: Array<{ variant_id: number; quantity: number }>;
+}): Promise<ShippingRate[]> {
+  return printfulRequest<ShippingRate[]>('/shipping/rates', {
     method: 'POST',
-    body: JSON.stringify({
-      sync_product: {
-        name: params.name,
-        thumbnail: params.thumbnail,
-      },
-      sync_variants: params.variants,
-    }),
+    body: JSON.stringify(params),
   });
 }
 
 /**
- * Create mockup for product
+ * Estimate order costs
  */
-export async function createMockup(params: {
+export async function estimateCosts(params: {
+  recipient: PrintfulRecipient;
+  items: PrintfulOrderItem[];
+}): Promise<{ costs: CostEstimate }> {
+  return printfulRequest<{ costs: CostEstimate }>('/orders/estimate-costs', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+/**
+ * Create mockup generation task
+ */
+export async function createMockupTask(params: {
   productId: number;
   variantIds: number[];
-  files: PrintfulFile[];
-}): Promise<{ mockups: Array<{ placement: string; mockup_url: string }> }> {
+  files: Array<{ placement: string; image_url: string }>;
+}): Promise<{ task_key: string; status: string }> {
   return printfulRequest(`/mockup-generator/create-task/${params.productId}`, {
     method: 'POST',
     body: JSON.stringify({
@@ -167,72 +182,16 @@ export async function createMockup(params: {
 /**
  * Get mockup task result
  */
-export async function getMockupResult(
-  taskKey: string
-): Promise<{ status: string; mockups: Array<{ placement: string; mockup_url: string }> }> {
+export async function getMockupResult(taskKey: string): Promise<{
+  status: string;
+  mockups?: Array<{ placement: string; variant_ids: number[]; mockup_url: string }>;
+  error?: string;
+}> {
   return printfulRequest(`/mockup-generator/task?task_key=${taskKey}`);
 }
 
 /**
- * Calculate shipping rates
- */
-export async function getShippingRates(params: {
-  recipient: PrintfulRecipient;
-  items: Array<{ variant_id: number; quantity: number }>;
-}): Promise<Array<{ id: string; name: string; rate: number; minDeliveryDays: number; maxDeliveryDays: number }>> {
-  return printfulRequest('/shipping/rates', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-}
-
-/**
- * Create order
- */
-export async function createOrder(params: {
-  recipient: PrintfulRecipient;
-  items: PrintfulOrderItem[];
-  retail_costs?: Partial<PrintfulCosts>;
-}): Promise<PrintfulOrder> {
-  return printfulRequest('/orders', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-}
-
-/**
- * Get order status
- */
-export async function getOrder(orderId: string): Promise<PrintfulOrder> {
-  return printfulRequest(`/orders/${orderId}`);
-}
-
-/**
- * List orders
- */
-export async function listOrders(params?: {
-  status?: string;
-  offset?: number;
-  limit?: number;
-}): Promise<PrintfulOrder[]> {
-  const query = new URLSearchParams();
-  if (params?.status) query.set('status', params.status);
-  if (params?.offset) query.set('offset', params.offset.toString());
-  if (params?.limit) query.set('limit', params.limit.toString());
-  
-  const queryString = query.toString();
-  return printfulRequest(`/orders${queryString ? `?${queryString}` : ''}`);
-}
-
-/**
- * Cancel order
- */
-export async function cancelOrder(orderId: string): Promise<void> {
-  await printfulRequest(`/orders/${orderId}`, { method: 'DELETE' });
-}
-
-/**
- * Get store info
+ * Get store information
  */
 export async function getStoreInfo(): Promise<{
   id: number;
@@ -240,74 +199,73 @@ export async function getStoreInfo(): Promise<{
   type: string;
   currency: string;
 }> {
-  return printfulRequest('/stores');
+  const stores = await printfulRequest<Array<{
+    id: number;
+    name: string;
+    type: string;
+    currency: string;
+  }>>('/stores');
+  return stores[0];
 }
 
 /**
- * Estimate order costs
+ * Create draft order (does not charge or submit)
  */
-export async function estimateCosts(params: {
+export async function createDraftOrder(params: {
   recipient: PrintfulRecipient;
-  items: Array<{ variant_id: number; quantity: number; files: PrintfulFile[] }>;
-}): Promise<PrintfulCosts> {
-  return printfulRequest('/orders/estimate-costs', {
+  items: PrintfulOrderItem[];
+}): Promise<{ id: number; status: string }> {
+  return printfulRequest('/orders', {
     method: 'POST',
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      ...params,
+      confirm: false, // Draft only - won't be submitted
+    }),
   });
 }
 
 /**
- * Popular product templates for quick setup
+ * Popular product IDs for quick access
  */
 export const POPULAR_PRODUCTS = {
-  tShirt: 71,          // Unisex Staple T-Shirt
-  hoodie: 380,         // Unisex Heavy Blend Hoodie
-  mug: 19,             // White Glossy Mug
-  poster: 1,           // Enhanced Matte Paper Poster
-  phoneCase: 195,      // iPhone Case
-  toteBag: 84,         // Large Organic Tote
-  sticker: 358,        // Kiss-Cut Stickers
-  canvas: 2,           // Canvas Print
-};
+  tShirt: 71,           // Unisex Staple T-Shirt | Bella + Canvas 3001
+  hoodie: 380,          // Unisex Heavy Blend Hoodie | Gildan 18500
+  mug: 19,              // White Glossy Mug
+  poster: 1,            // Enhanced Matte Paper Poster
+  phoneCase: 195,       // iPhone Case
+  toteBag: 84,          // Large Organic Tote
+  sticker: 358,         // Kiss-Cut Stickers
+  canvas: 2,            // Canvas Print
+} as const;
 
 /**
- * Quick product creation with trending design
+ * Get popular products with details
  */
-export async function quickCreateProduct(params: {
-  name: string;
-  designUrl: string;
-  productType: keyof typeof POPULAR_PRODUCTS;
-  retailMarkup?: number; // Default 2x (100% markup)
-}): Promise<{ productId: number; mockupUrls: string[] }> {
-  const productId = POPULAR_PRODUCTS[params.productType];
-  const markup = params.retailMarkup || 2;
-  
-  // Get product variants
-  const product = await getProduct(productId);
-  
-  // Get base variants (first of each size/color combo)
-  const baseVariants = product.variants.slice(0, 5);
-  
-  // Create sync product with design
-  const syncProduct = await createSyncProduct({
-    name: params.name,
-    thumbnail: params.designUrl,
-    variants: baseVariants.map(v => ({
-      variant_id: v.id,
-      retail_price: v.price * markup,
-      files: [{ type: 'default', url: params.designUrl }],
-    })),
-  });
+export async function getPopularProducts(): Promise<PrintfulProductDetail[]> {
+  const productIds = Object.values(POPULAR_PRODUCTS);
+  const products = await Promise.all(
+    productIds.slice(0, 5).map(id => getProduct(id).catch(() => null))
+  );
+  return products.filter((p): p is PrintfulProductDetail => p !== null);
+}
 
-  // Generate mockups
-  const mockupTask = await createMockup({
-    productId,
-    variantIds: baseVariants.map(v => v.id),
-    files: [{ type: 'default', url: params.designUrl }],
-  });
-
+/**
+ * Quick price check for a product
+ */
+export async function getProductPricing(productId: number): Promise<{
+  product: string;
+  basePrice: string;
+  variants: Array<{ name: string; price: string }>;
+}> {
+  const detail = await getProduct(productId);
+  const variants = detail.variants.slice(0, 5).map(v => ({
+    name: v.name,
+    price: v.price,
+  }));
+  
   return {
-    productId: syncProduct.id,
-    mockupUrls: mockupTask.mockups.map(m => m.mockup_url),
+    product: detail.product.title,
+    basePrice: detail.variants[0]?.price || 'N/A',
+    variants,
   };
 }
