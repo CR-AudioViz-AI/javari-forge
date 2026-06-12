@@ -1,39 +1,28 @@
-// app/page.tsx — Javari Market Forge
-// CR AudioViz AI · EIN 39-3646201 · May 2026
-'use client'
-import { useState, useRef } from 'react'
-const getFeatures = () => [
-  { e: '⚡', t: 'AI-Powered', d: 'Built on Javari AI — smart, fast, accurate' },
-  { e: '🔐', t: 'Your Data', d: 'Everything you create belongs to you. No lock-in.' },
-  { e: '💳', t: '50 Free Credits', d: 'Start free. Credits never expire.' },
-  { e: '🔗', t: 'One Platform', d: 'One account. 150+ Javari apps.' },
-]
+"use client";
+// app/page.tsx — Javari Forge
+// CR AudioViz AI · EIN 39-3646201 · June 2026
 export default function Page() {
-  const features = getFeatures()
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#e2e8f0', fontFamily: 'system-ui,sans-serif' }}>
-      <div style={{ height: 60 }} />
-      <section style={{ textAlign: 'center', padding: '64px 24px 40px', maxWidth: 700, margin: '0 auto' }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🔬</div>
-        <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: '0 0 16px', color: '#3b82f6' }}>Javari Market Forge</h1>
-        <p style={{ fontSize: 18, color: '#9ca3af', maxWidth: 520, margin: '0 auto 32px', lineHeight: 1.65 }}>AI market intelligence — competitor analysis, trend forecasting, opportunity discovery.</p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="https://craudiovizai.com/auth/signup" style={{ background: '#3b82f6', color: '#fff', borderRadius: 10, padding: '13px 28px', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>Start Free →</a>
-          <a href="https://craudiovizai.com" style={{ background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', borderRadius: 10, padding: '13px 28px', fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>View Platform</a>
+    <div style={{minHeight:"100vh",background:"#040912"}}>
+      <nav style={{background:"#1E3A5F",padding:"0 20px",height:52,display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(0,180,216,0.15)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:20}}>🔨</span><span style={{fontWeight:800,color:"#00B4D8",fontSize:15}}>Javari Forge</span></div>
+        <a href="https://craudiovizai.com/auth/signup" style={{background:"#FF0800",color:"#fff",borderRadius:7,padding:"5px 14px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Sign Up Free</a>
+      </nav>
+      <section style={{background:"linear-gradient(135deg,#1E3A5F,#040912)",padding:"40px 24px 32px",textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:8}}>🔨</div>
+        <h1 style={{fontSize:"clamp(22px,4vw,40px)",fontWeight:900,color:"#fff",margin:"0 0 8px"}}>Javari Forge</h1>
+        <p style={{color:"rgba(255,255,255,0.7)",fontSize:15,margin:0}}>Developer tools and platform build utilities</p>
+      </section>
+      <section style={{maxWidth:900,margin:"0 auto",padding:"24px 16px 48px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+          <div style={{background:"#0F1F32",border:"1px solid rgba(0,180,216,0.1)",borderRadius:12,padding:16}}><div style={{fontSize:24,marginBottom:6}}>🔨</div><div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>Build Tools</div><div style={{fontSize:11,color:"#6B7280"}}>Platform build utilities</div></div>
+        <div style={{background:"#0F1F32",border:"1px solid rgba(0,180,216,0.1)",borderRadius:12,padding:16}}><div style={{fontSize:24,marginBottom:6}}>🔧</div><div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>Dev Utils</div><div style={{fontSize:11,color:"#6B7280"}}>Developer tools and helpers</div></div>
+        <div style={{background:"#0F1F32",border:"1px solid rgba(0,180,216,0.1)",borderRadius:12,padding:16}}><div style={{fontSize:24,marginBottom:6}}>📦</div><div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,marginBottom:3}}>Package Manager</div><div style={{fontSize:11,color:"#6B7280"}}>Dependency management</div></div>
         </div>
       </section>
-      <section style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px 60px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16 }}>
-        {features.map(f => (
-          <div key={f.t} style={{ background: '#111118', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{f.e}</div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#e2e8f0', marginBottom: 4 }}>{f.t}</div>
-            <div style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>{f.d}</div>
-          </div>
-        ))}
-      </section>
-      <footer style={{ background: '#050609', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '20px', textAlign: 'center' }}>
-        <p style={{ color: '#374151', fontSize: 11, margin: 0 }}>© 2026 CR AudioViz AI, LLC — EIN: 39-3646201 · <a href="https://craudiovizai.com/auth/signup" style={{ color: '#3b82f6', textDecoration: 'none' }}>Sign Up Free</a></p>
+      <footer style={{borderTop:"1px solid rgba(0,180,216,0.08)",padding:"10px 24px",textAlign:"center"}}>
+        <p style={{color:"#374151",fontSize:11,margin:0}}>© 2026 CR AudioViz AI, LLC · EIN: 39-3646201 · <a href="https://craudiovizai.com" style={{color:"#00B4D8",textDecoration:"none"}}>craudiovizai.com</a></p>
       </footer>
     </div>
-  )
+  );
 }
