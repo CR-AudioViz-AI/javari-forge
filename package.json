@@ -2,7 +2,26 @@
   "name": "javari-forge",
   "version": "1.0.0",
   "private": true,
-  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
-  "dependencies": { "next": "14.2.29", "react": "^18", "react-dom": "^18" },
-  "devDependencies": { "@types/node": "^20", "@types/react": "^18", "typescript": "^5" }
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.29",
+    "react": "^18",
+    "react-dom": "^18",
+    "@radix-ui/react-slot": "^1.0.2",
+    "class-variance-authority": "^0.7.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "@supabase/ssr": "^0.5.0",
+    "lucide-react": "^0.383.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "typescript": "^5"
+  }
 }
